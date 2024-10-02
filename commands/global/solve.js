@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, ApplicationIntegrationType} = require("discord.js");
 const fs = require("node:fs");
 
 const DICTIONARIES = {
@@ -25,6 +25,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName("solve")
 		.setDescription("Solves a (regex) prompt in whichever dictionary.")
+        .setIntegrationTypes([ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall])
         .addStringOption(option =>
             option.setName("prompt")
             .setRequired(true)
@@ -51,10 +52,12 @@ module.exports = {
         const dictionary = interaction.options.getString("dictionary") ?? "FWD";
         const visible = interaction.options.getBoolean("visible") ?? false;
         const usable = DICTIONARIES[dictionary].match(new RegExp(`[\\S]*${prompt}[\\S]*`, "gm"));
-        const words = shuffleArray(usable)
-        if (words.length < 1) {
-            await interaction.reply(`No words matching ${prompt} (in ${dictionary})`)
+        if (usable == null) {
+            await interaction.reply({content:`No words matching ${prompt} (in ${dictionary})`, ephemeral: true})
+            return
         } 
+        const words = shuffleArray(usable)
+
         const wordEmbed = new EmbedBuilder()
             .setTitle(`Words matching ${prompt} (in ${dictionary})`)
             .setDescription(

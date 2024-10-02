@@ -2,7 +2,8 @@ const { REST, Routes } = require("discord.js");
 require("dotenv").config()
 const TOKEN = process.env.TOKEN
 const CLIENT_ID = process.env.CLIENT_ID
-const TEST_GUILD_ID = process.env.TEST_GUILD_ID
+const TEST_GUILD_IDS = process.env.TEST_GUILD_IDS.split("-")
+
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -24,7 +25,6 @@ for (const folder of commandFolders) {
 				console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
 			}
 		}
-		continue;
 	}
 	for (const file of commandFiles) {
 		const filePath = path.join(commandsPath, file);
@@ -37,24 +37,23 @@ for (const folder of commandFolders) {
 	}
 }
 
-const rest = new REST().setToken(TOKEN);
+const rest = new REST({ version: '10' }).setToken(TOKEN);
 
 (async () => {
 	try {
-		console.log(`Started refreshing ${commands.length} application (/) commands.`);
+		for (const guild of TEST_GUILD_IDS)
+		{
+			const data = await rest.put(
+				Routes.applicationGuildCommands(CLIENT_ID, guild),
+				{ body: commands },
+			);
+		}
 
-		const data = await rest.put(
-			Routes.applicationGuildCommands(CLIENT_ID, TEST_GUILD_ID),
-			{ body: commands },
-		);
 
 		const globalData = await rest.put(
 			Routes.applicationCommands(CLIENT_ID),
 			{ body: globalCommands },
 		);
-
-		console.log(`Successfully reloaded ${data.length} application (/) commands.`);
-		console.log(`Successfully reloaded ${globalData.length} global application (/) commands.`);
 
 	} catch (error) {
 		console.error(error);
