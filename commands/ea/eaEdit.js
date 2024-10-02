@@ -2,16 +2,16 @@ const { SlashCommandBuilder} = require("discord.js");
 require("dotenv").config()
 const fs = require("node:fs");
 
-const FWD = "dictionaries/fwd.txt"
-const CHANNEL = process.env.FWD_CHANNEL
+const EA = "dictionaries/ea.txt"
+const CHANNEL = process.env.EA_CHANNEL
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName("fwd")
-		.setDescription("Fake Word Dictionary")
+		.setName("ea")
+		.setDescription("Extra Additions")
         .addSubcommand(subcommand =>
             subcommand
             .setName("add-word")
-            .setDescription("adds a word to the FWD")
+            .setDescription("adds a word to EA")
             .addStringOption(option => 
                 option.setName("words")
                 .setRequired(true)
@@ -20,7 +20,7 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
             .setName("remove-word")
-            .setDescription("removes a word from the FWD")
+            .setDescription("removes a word from EA")
             .addStringOption(option => 
                 option.setName("words")
                 .setRequired(true)
@@ -36,7 +36,7 @@ module.exports = {
         let invalidWordsCount = 0
         if (interaction.options.getSubcommand() === "add-word") {
             const words = interaction.options.getString("words").toLowerCase().replace(/\s/g, "\n").split("\n")
-            let dict = fs.readFileSync(FWD, "utf8")
+            let dict = fs.readFileSync(EA, "utf8")
             let wrote = ""
             for (const word of words)
             {
@@ -47,16 +47,15 @@ module.exports = {
                     wrote += `${word}\n`
                 } else {
                     invalidWords += `${word}\n`
-                    invalidWordsCount++
                 }
             }
-            fs.writeFileSync(FWD, dict)
+            fs.writeFileSync(EA, dict)
             await interaction.reply({content:`${invalidWords ? "invalid " + invalidWords : `Added ${words.length - invalidWordsCount} words`}`, ephemeral: true})
             await interaction.client.channels.cache.get(CHANNEL).send(interaction.member.user.username + " ADDED\n" + wrote)
         }
         else if (interaction.options.getSubcommand() === "remove-word") {
-            const words = interaction.options.getString("words").toLowerCase().replace(/\s/g, "\n").split("\n")
-            let dict = fs.readFileSync(FWD, "utf8")
+            const words = interaction.options.getString("words").toLowerCase().replace(/\w/, "\n").split("\n")
+            let dict = fs.readFileSync(EA, "utf8")
             let wrote = ""
             for (const word of words)
             {
@@ -67,10 +66,9 @@ module.exports = {
                     wrote += `${word}\n`
                 } else {
                     invalidWords += `${word}\n`
-                    invalidWordsCount++
                 }
             }
-            fs.writeFileSync(FWD, dict)
+            fs.writeFileSync(EA, dict)
             await interaction.reply({content:`${invalidWords ? "invalid " + invalidWords : ""} Removed ${words.length - invalidWordsCount} words`, ephemeral: true})
             await interaction.client.channels.cache.get(CHANNEL).send(interaction.member.user.username + " REMOVED\n" + wrote)
         }
